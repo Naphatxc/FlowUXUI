@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fintech LINE OA — UX Flow (v1.1)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #161922;
+    --surface2: #1e2330;
+    --border: #2a3045;
+    --accent-purple: #7c6ef0;
+    --accent-teal: #2dd4a0;
+    --accent-amber: #f5a623;
+    --accent-red: #ef5350;
+    --accent-blue: #4a9eff;
+    --text-primary: #e8eaf0;
+    --text-secondary: #8892a4;
+    --text-muted: #4a5568;
+    --font: 'IBM Plex Sans Thai', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+    --lane-w: 260px;
+    --node-h: 72px;
+    --gap-y: 56px;
+    --gap-x: 48px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text-primary); min-height: 100vh; overflow-x: auto; }
+
+  /* Header */
+  .header { position: sticky; top: 0; z-index: 100; background: rgba(13,15,20,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .logo-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent-teal); box-shadow: 0 0 10px var(--accent-teal); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .header h1 { font-size: 14px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
+
+  .legend { display: flex; gap: 16px; align-items: center; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+  /* Canvas */
+  .canvas-wrap { padding: 32px 40px 80px; min-width: fit-content; }
+  .lane-headers { display: flex; gap: var(--gap-x); position: sticky; top: 57px; z-index: 90; background: var(--bg); border-bottom: 1px solid var(--border); }
+  .lane-header { width: var(--lane-w); padding: 12px; text-align: center; font-size: 11px; font-weight: 600; text-transform: uppercase; border-top: 3px solid transparent; }
+  .lane-header.agent { border-color: var(--accent-purple); color: var(--accent-purple); }
+  .lane-header.system { border-color: var(--accent-teal); color: var(--accent-teal); }
+  .lane-header.customer { border-color: var(--accent-blue); color: var(--accent-blue); }
+
+  .swimlanes { display: flex; gap: var(--gap-x); position: relative; }
+  .lane { width: var(--lane-w); flex-shrink: 0; position: relative; padding-top: 20px; }
+  .lane::after { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: var(--border); opacity: 0.2; }
+
+  /* Phase Header */
+  .phase-header { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 10px 40px; margin: 24px -40px; display: flex; align-items: center; gap: 10px; }
+  .phase-header-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .phase-header-text { font-size: 10px; font-family: var(--mono); font-weight: 600; text-transform: uppercase; }
+
+  /* Nodes */
+  .node { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; margin-bottom: var(--gap-y); cursor: pointer; transition: 0.2s; min-height: var(--node-h); display: flex; flex-direction: column; justify-content: center; z-index: 10; }
+  .node:hover { border-color: var(--accent-teal); background: var(--surface2); transform: translateY(-2px); }
+  .node-tag { font-size: 9px; font-family: var(--mono); color: var(--text-muted); text-transform: uppercase; margin-bottom: 2px; }
+  .node-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .node-sub { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  .node-step { position: absolute; top: -10px; right: 14px; font-size: 9px; font-family: var(--mono); background: var(--border); color: var(--text-primary); padding: 1px 6px; border-radius: 10px; }
+
+  /* Visual Elements */
+  .rich-menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 8px; }
+  .rm-cell { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 6px; text-align: center; font-size: 8px; }
+  .rm-cell.highlight { border-color: var(--accent-blue); background: rgba(74,158,255,0.1); }
+  
+  .mock-ui { background: #000; border: 1px solid var(--border); border-radius: 8px; margin-top: 8px; overflow: hidden; }
+  .mock-header { background: #1a1a1a; padding: 4px 8px; font-size: 8px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+  .mock-content { padding: 8px; }
+
+  .v-conn { width: 1px; background: var(--border); height: 28px; margin: -28px auto 0; position: relative; z-index: 1; }
+  
+  /* Portfolio Special Styles */
+  .port-card { background: linear-gradient(135deg, #1e2330 0%, #161922 100%); border: 1px solid var(--border); border-radius: 6px; padding: 8px; margin-top: 6px; }
+  .port-row { display: flex; justify-content: space-between; font-size: 9px; margin-bottom: 2px; }
+  .port-val { color: var(--accent-teal); font-family: var(--mono); font-weight: 600; }
+
+  /* Detail Panel */
+  #detail-panel { position: fixed; right: 0; top: 0; bottom: 0; width: 320px; background: var(--surface); border-left: 1px solid var(--border); padding: 32px 24px; z-index: 200; transform: translateX(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow-y: auto; }
+  #detail-panel.open { transform: translateX(0); }
+  .panel-close { position: absolute; top: 16px; right: 16px; cursor: pointer; background: none; border: none; color: var(--text-muted); font-size: 20px; }
+  .panel-tag { font-size: 10px; font-family: var(--mono); color: var(--accent-teal); text-transform: uppercase; margin-bottom: 8px; }
+  .panel-title { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+  .panel-section { margin-bottom: 24px; }
+  .panel-section-title { font-size: 11px; font-family: var(--mono); color: var(--text-muted); text-transform: uppercase; border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-bottom: 12px; }
+  .panel-item { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.5; padding-left: 12px; position: relative; }
+  .panel-item::before { content: '•'; position: absolute; left: 0; color: var(--accent-teal); }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo-dot"></div>
+    <h1>Fintech LINE OA — Flow v1.1</h1>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-purple)"></div> Agent</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-teal)"></div> System</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-blue)"></div> Customer</div>
+  </div>
+</div>
+
+<div class="canvas-wrap">
+  <div class="lane-headers">
+    <div class="lane-header agent">🏢 Agent Web</div>
+    <div style="width:var(--gap-x)"></div>
+    <div class="lane-header system">⚙️ Backend / LINE</div>
+    <div style="width:var(--gap-x)"></div>
+    <div class="lane-header customer">📱 Customer LINE</div>
+  </div>
+
+  <div class="phase-header">
+    <div class="phase-header-dot" style="background:var(--accent-blue)"></div>
+    <span class="phase-header-text" style="color:var(--accent-blue)">Phase 0: Entry Point</span>
+  </div>
+
+  <div class="swimlanes">
+    <div class="lane"><div class="node" style="opacity:0.3"><div class="node-title">Standby</div></div></div>
+    <div style="width:var(--gap-x)"></div>
+    <div class="lane">
+      <div class="node" onclick="showDetail('rich-menu')">
+        <div class="node-tag">LINE OA</div>
+        <div class="node-title">Rich Menu 6-Grid</div>
+        <div class="rich-menu-grid">
+          <div class="rm-cell">Pending</div>
+          <div class="rm-cell highlight">Summary</div>
+          <div class="rm-cell highlight">Portfolio</div>
+          <div class="rm-cell">App</div>
+          <div class="rm-cell">Privilege</div>
+          <div class="rm-cell">Contact</div>
+        </div>
+      </div>
+    </div>
+    <div style="width:var(--gap-x)"></div>
+    <div class="lane">
+      <div class="node">
+        <div class="node-tag">LINE App</div>
+        <div class="node-title">Tap Menu</div>
+        <div class="node-sub">กดเลือก Portfolio หรือ Summary</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase-header">
+    <div class="phase-header-dot" style="background:var(--accent-teal)"></div>
+    <span class="phase-header-text" style="color:var(--accent-teal)">Phase 5A: My Portfolio (Dynamic Lookup)</span>
+  </div>
+
+  <div class="swimlanes">
+    <div class="lane">
+      <div class="node" style="opacity:0.5">
+        <div class="node-tag">Data Source</div>
+        <div class="node-title">Core Banking Sync</div>
+        <div class="node-sub">ข้อมูลพอร์ตอัปเดตจากระบบหลังบ้าน</div>
+      </div>
+    </div>
+    <div style="width:var(--gap-x)"></div>
+    
+    <div class="lane">
+      <div class="node" onclick="showDetail('port-logic')">
+        <div class="node-step">1</div>
+        <div class="node-tag">LIFF Auth</div>
+        <div class="node-title">Verify & Fetch Accounts</div>
+        <div class="node-sub">ดึงรายการบัญชีทั้งหมดที่ผูกกับ LINE ID</div>
+      </div>
+      <div class="v-conn"></div>
+      <div class="node" onclick="showDetail('port-data')">
+        <div class="node-step">3</div>
+        <div class="node-tag">Portfolio API</div>
+        <div class="node-title">Calculate Net Worth</div>
+        <div class="node-sub">ดึง NAV, กำไร/ขาดทุน และสัดส่วนกองทุน</div>
+      </div>
+    </div>
+    <div style="width:var(--gap-x)"></div>
+
+    <div class="lane">
+      <div class="node" onclick="showDetail('port-ui')">
+        <div class="node-step">2</div>
+        <div class="node-tag">LIFF View</div>
+        <div class="node-title">Account Selector</div>
+        <div class="mock-ui">
+          <div class="mock-header">Select Account</div>
+          <div class="mock-content">
+            <div style="font-size:9px; border:1px solid var(--accent-blue); padding:4px; border-radius:4px; margin-bottom:4px">✓ บัญชีบุคคล 001</div>
+            <div style="font-size:9px; border:1px solid var(--border); padding:4px; border-radius:4px; opacity:0.6">บัญชีร่วม 002</div>
+          </div>
+        </div>
+      </div>
+      <div class="v-conn"></div>
+      <div class="node">
+        <div class="node-step">4</div>
+        <div class="node-tag">LIFF View</div>
+        <div class="node-title">Portfolio Dashboard</div>
+        <div class="port-card">
+          <div class="port-row"><span>Total Value</span><span class="port-val">1,250,000.00</span></div>
+          <div class="port-row"><span>Gain/Loss</span><span class="port-val" style="color:var(--accent-teal)">+4.2%</span></div>
+          <div style="height:4px; background:#333; margin-top:6px; border-radius:2px; overflow:hidden">
+            <div style="width:70%; height:100%; background:var(--accent-teal)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase-header">
+    <div class="phase-header-dot" style="background:var(--accent-amber)"></div>
+    <span class="phase-header-text" style="color:var(--accent-amber)">Phase 5B: Daily Summary (Transaction Report)</span>
+  </div>
+
+  <div class="swimlanes">
+    <div class="lane">
+      <div class="node" style="opacity:0.5">
+        <div class="node-tag">Agent Portal</div>
+        <div class="node-title">Transaction History</div>
+        <div class="node-sub">ดูประวัติรายการที่ Agent ส่งให้ลูกค้า</div>
+      </div>
+    </div>
+    <div style="width:var(--gap-x)"></div>
+
+    <div class="lane">
+      <div class="node" onclick="showDetail('summary-logic')">
+        <div class="node-step">1</div>
+        <div class="node-tag">Reporting DB</div>
+        <div class="node-title">Filter Today's Trades</div>
+        <div class="node-sub">Query รายการที่เกิดขึ้นภายใน 24 ชม. ล่าสุด</div>
+      </div>
+      <div class="v-conn"></div>
+      <div class="node">
+        <div class="node-step">3</div>
+        <div class="node-tag">Export Service</div>
+        <div class="node-title">Generate PDF/Image</div>
+        <div class="node-sub">สร้างสรุปรายการเพื่อการดาวน์โหลด (Optional)</div>
+      </div>
+    </div>
+    <div style="width:var(--gap-x)"></div>
+
+    <div class="lane">
+      <div class="node" onclick="showDetail('summary-ui')">
+        <div class="node-step">2</div>
+        <div class="node-tag">LIFF View</div>
+        <div class="node-title">Daily Execution List</div>
+        <div class="mock-ui">
+          <div class="mock-header">Today's Summary</div>
+          <div class="mock-content">
+            <div style="font-size:8px; margin-bottom:4px; display:flex; justify-content:space-between">
+              <span>BUY: K-CASH</span><span style="color:var(--accent-teal)">SUCCESS</span>
+            </div>
+            <div style="font-size:8px; display:flex; justify-content:space-between">
+              <span>SELL: SCBGP</span><span style="color:var(--accent-red)">REJECTED</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="detail-panel">
+  <button class="panel-close" onclick="closePanel()">✕</button>
+  <div id="panel-content"></div>
+</div>
+
+<script>
+const details = {
+  'rich-menu': {
+    tag: 'Entry Point', title: 'Rich Menu Configuration',
+    sections: [
+      { title: 'Portfolio Slot', items: ['เมื่อกดจะเปิด LIFF Portfolio Page','ตรวจสอบการลงทะเบียนครั้งแรก (Onboarding)'] },
+      { title: 'Summary Slot', items: ['แสดงรายการความเคลื่อนไหวล่าสุด','ลดการสอบถามเจ้าหน้าที่ (Self-service)'] }
+    ]
+  },
+  'port-logic': {
+    tag: 'System Logic', title: 'Multi-account Mapping',
+    sections: [
+      { title: 'Process', items: ['Map LINE UID กับ Customer ID ใน Database','ดึงบัญชีทั้งหมด (Main/Joint/Corporate)','ตรวจสอบสิทธิ์การเข้าถึงข้อมูลแต่ละบัญชี'] }
+    ]
+  },
+  'port-data': {
+    tag: 'System Logic', title: 'Portfolio Data Fetching',
+    sections: [
+      { title: 'Data Points', items: ['Cost Basis vs Market Value','Unrealized Gain/Loss','Asset Allocation (Equity/Bond/Cash)','Fund Performance History'] }
+    ]
+  },
+  'port-ui': {
+    tag: 'UX/UI Design', title: 'Account Selector UX',
+    sections: [
+      { title: 'Interaction', items: ['Default เลือกบัญชีล่าสุดที่ใช้งาน','แสดงชื่อบัญชีและเลขที่บัญชี (Masked)','เปลี่ยนบัญชีแล้ว Data ใน Dashboard ต้องอัปเดตทันที'] }
+    ]
+  },
+  'summary-logic': {
+    tag: 'System Logic', title: 'Transaction Filtering',
+    sections: [
+      { title: 'Business Logic', items: ['แสดงสถานะรายการ: Pending, Success, Rejected, Expired','รวมยอดรวมซื้อ/ขายแยกตามรายวัน','สามารถ Filter ย้อนหลังได้ 7 วัน'] }
+    ]
+  },
+  'summary-ui': {
+    tag: 'UX/UI Design', title: 'Transaction Cards',
+    sections: [
+      { title: 'UI Components', items: ['Status Badge ที่ชัดเจน','แสดงเวลาที่ทำรายการ (Timestamp)','มีปุ่มดูรายละเอียดเพิ่มเติม (View Details) ของแต่ละ Order'] }
+    ]
+  }
+};
+
+function showDetail(key) {
+  const d = details[key];
+  const panel = document.getElementById('detail-panel');
+  const content = document.getElementById('panel-content');
+  let html = `<div class="panel-tag">${d.tag}</div><div class="panel-title">${d.title}</div>`;
+  d.sections.forEach(s => {
+    html += `<div class="panel-section"><div class="panel-section-title">${s.title}</div>`;
+    s.items.forEach(i => html += `<div class="panel-item">${i}</div>`);
+    html += '</div>';
+  });
+  content.innerHTML = html;
+  panel.classList.add('open');
+}
+function closePanel() { document.getElementById('detail-panel').classList.remove('open'); }
+</script>
+</body>
+</html>

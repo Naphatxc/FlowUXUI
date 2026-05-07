@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fintech LINE OA — UX Flow (v1.1)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #161922;
+    --surface2: #1e2330;
+    --border: #2a3045;
+    --accent-purple: #7c6ef0;
+    --accent-teal: #2dd4a0;
+    --accent-amber: #f5a623;
+    --accent-red: #ef5350;
+    --accent-blue: #4a9eff;
+    --text-primary: #e8eaf0;
+    --text-secondary: #8892a4;
+    --text-muted: #4a5568;
+    --font: 'IBM Plex Sans Thai', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+    --connector: #2a3045;
+    --lane-w: 260px;
+    --node-h: 72px;
+    --gap-y: 56px;
+    --gap-x: 48px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: auto;
+  }
+
+  /* ── Header ── */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(13,15,20,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .logo-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--accent-teal);
+    box-shadow: 0 0 10px var(--accent-teal);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  .header h1 { font-size: 14px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-primary); }
+  .header-meta { font-size: 11px; font-family: var(--mono); color: var(--text-muted); }
+
+  .legend {
+    display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+  /* ── Flow canvas ── */
+  .canvas-wrap { padding: 32px 40px 80px; min-width: fit-content; }
+
+  /* ── Swimlane header row ── */
+  .lane-headers {
+    display: flex;
+    gap: var(--gap-x);
+    margin-bottom: 0;
+    position: sticky;
+    top: 57px;
+    z-index: 90;
+    background: rgba(13,15,20,0.95);
+    padding: 0 0 0 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .lane-header {
+    width: var(--lane-w);
+    flex-shrink: 0;
+    padding: 12px 20px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-top: 3px solid transparent;
+  }
+  .lane-header.agent   { border-color: var(--accent-purple); color: var(--accent-purple); }
+  .lane-header.system  { border-color: var(--accent-teal);   color: var(--accent-teal); }
+  .lane-header.customer{ border-color: var(--accent-blue);   color: var(--accent-blue); }
+
+  /* ── Swimlane body ── */
+  .swimlanes {
+    display: flex;
+    gap: var(--gap-x);
+    position: relative;
+  }
+  .lane {
+    width: var(--lane-w);
+    flex-shrink: 0;
+    position: relative;
+    padding-top: 40px;
+  }
+
+  /* subtle stripe bg for each lane */
+  .lane::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 71px,
+      rgba(255,255,255,0.012) 72px
+    );
+    pointer-events: none;
+  }
+
+  /* lane vertical guide line */
+  .lane::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 50%;
+    width: 1px;
+    background: var(--border);
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  /* ── Sections ── */
+  .section-label {
+    grid-column: 1 / -1;
+    font-size: 10px;
+    font-family: var(--mono);
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 24px 0 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── Nodes ── */
+  .node {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: var(--gap-y);
+    cursor: pointer;
+    transition: all 0.18s ease;
+    min-height: var(--node-h);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+  }
+  .node:hover {
+    border-color: var(--node-color, var(--accent-teal));
+    background: var(--surface2);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px var(--node-color, var(--accent-teal));
+  }
+  .node.active {
+    border-color: var(--node-color, var(--accent-teal));
+    box-shadow: 0 0 0 1px var(--node-color, var(--accent-teal)), 0 0 20px rgba(var(--node-rgb, 45,212,160),0.15);
+  }
+
+  .node-tag {
+    font-size: 9px;
+    font-family: var(--mono);
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--node-color, var(--text-muted));
+    margin-bottom: 2px;
+  }
+  .node-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.35;
+  }
+  .node-sub {
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    margin-top: 2px;
+  }
+
+  /* left border accent */
+  .node::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 12px; bottom: 12px;
+    width: 3px;
+    border-radius: 0 2px 2px 0;
+    background: var(--node-color, transparent);
+    opacity: 0.7;
+  }
+
+  /* node step number */
+  .node-step {
+    position: absolute;
+    top: -10px; right: 14px;
+    font-size: 9px;
+    font-family: var(--mono);
+    background: var(--node-color, var(--surface2));
+    color: var(--bg);
+    padding: 1px 6px;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+
+  /* diamond decision */
+  .decision {
+    width: var(--lane-w);
+    margin-bottom: var(--gap-y);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    cursor: pointer;
+  }
+  .diamond-wrap {
+    width: 120px;
+    height: 60px;
+    position: relative;
+    margin: 0 auto;
+  }
+  .diamond-wrap svg { overflow: visible; }
+  .decision-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: center;
+    margin-top: 6px;
+  }
+  .decision-sub {
+    font-size: 10px;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-top: 2px;
+  }
+
+  /* connector arrows (SVG overlay) */
+  .connector-svg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: visible;
+  }
+
+  /* Rich Menu Grid */
+  .rich-menu-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 12px 0;
+  }
+  .rm-cell {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .rm-cell:hover { border-color: var(--accent-teal); background: rgba(45,212,160,0.06); }
+  .rm-cell.highlight { border-color: var(--accent-teal); box-shadow: 0 0 12px rgba(45,212,160,0.2); }
+  .rm-icon { font-size: 20px; margin-bottom: 4px; }
+  .rm-label { font-size: 9px; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.05em; }
+  .rm-badge {
+    position: absolute; top: 4px; right: 4px;
+    background: var(--accent-red);
+    color: #fff;
+    font-size: 8px;
+    font-weight: 700;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* LIFF mockup */
+  .liff-mock {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 8px 0;
+  }
+  .liff-mock.near-expiry {
+    border-color: var(--accent-red);
+    box-shadow: 0 0 0 1px rgba(239,83,80,0.3);
+  }
+  .liff-warning {
+    background: rgba(239,83,80,0.12);
+    border-left: 3px solid var(--accent-red);
+    color: var(--accent-red);
+    padding: 8px 10px;
+    font-size: 10px;
+    margin: 0 12px 8px;
+    border-radius: 8px;
+  }
+  .liff-topbar {
+    background: var(--surface);
+    padding: 8px 12px;
+    font-size: 10px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .liff-dot { width:6px;height:6px;border-radius:50%; }
+  .liff-body { padding: 12px; }
+  .liff-row { display:flex; justify-content:space-between; font-size:10px; margin-bottom:4px; }
+  .liff-key { color: var(--text-muted); }
+  .liff-val { font-weight:600; font-family: var(--mono); color: var(--text-primary); }
+  .liff-btn {
+    display: block; width: 100%; margin-top: 8px; padding: 7px;
+    border-radius: 6px; font-size: 11px; font-weight: 600;
+    border: none; cursor: pointer; font-family: var(--font);
+  }
+  .liff-btn.confirm { background: var(--accent-teal); color: #0d0f14; }
+  .liff-btn.reject  { background: transparent; border: 1px solid var(--accent-red); color: var(--accent-red); margin-top: 4px; }
+  .liff-btn.expired { background: var(--surface); color: var(--text-muted); border: 1px solid var(--border); cursor: not-allowed; }
+
+  /* Status badges */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 8px; border-radius: 20px;
+    font-size: 10px; font-weight: 600; font-family: var(--mono);
+  }
+  .badge.success { background: rgba(45,212,160,0.12); color: var(--accent-teal); border: 1px solid rgba(45,212,160,0.3); }
+  .badge.pending { background: rgba(245,166,35,0.12); color: var(--accent-amber); border: 1px solid rgba(245,166,35,0.3); }
+  .badge.rejected{ background: rgba(239,83,80,0.12); color: var(--accent-red); border: 1px solid rgba(239,83,80,0.3); }
+  .badge.expired { background: rgba(138,145,170,0.1); color: var(--text-muted); border: 1px solid var(--border); }
+
+  /* Flex message mock */
+  .flex-msg {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 8px 0;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+  }
+  .flex-header {
+    background: #1a237e;
+    padding: 10px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .flex-header-title { font-size: 11px; font-weight: 700; color: #fff; }
+  .flex-header-badge { background: rgba(255,255,255,0.2); color: #fff; font-size: 9px; padding: 2px 6px; border-radius: 4px; }
+  .flex-body { padding: 12px 14px; }
+  .flex-fund { font-size: 13px; font-weight: 700; color: #1a237e; margin-bottom: 6px; }
+  .flex-row { display:flex; justify-content:space-between; font-size:10px; margin-bottom:3px; color:#666; }
+  .flex-row strong { color: #1a237e; }
+  .flex-divider { border: none; border-top: 1px solid #eee; margin: 8px 0; }
+  .flex-cta {
+    display: block; width: 100%;
+    background: #1a237e; color: #fff;
+    text-align: center; padding: 9px;
+    border-radius: 6px; font-size: 12px; font-weight: 700;
+    margin: 8px 0 4px; border: none; cursor: pointer;
+  }
+
+  /* connector label */
+  .conn-label {
+    position: absolute;
+    font-size: 9px;
+    font-family: var(--mono);
+    color: var(--text-muted);
+    background: var(--bg);
+    padding: 0 4px;
+    pointer-events: none;
+  }
+
+  /* cross-lane arrows */
+  .arrow-container {
+    position: absolute;
+    pointer-events: none;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    overflow: visible;
+  }
+
+  /* vertical connector within lane */
+  .v-conn {
+    width: 2px;
+    background: var(--border);
+    margin: -28px auto;
+    height: 28px;
+    position: relative;
+  }
+  .v-conn::after {
+    content: '▼';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 8px;
+    color: var(--text-muted);
+  }
+
+  /* Expiry section highlight */
+  .expiry-section {
+    background: rgba(239,83,80,0.04);
+    border: 1px dashed rgba(239,83,80,0.2);
+    border-radius: 12px;
+    padding: 16px;
+    margin: 8px 0;
+  }
+  .expiry-section .node { background: rgba(239,83,80,0.06); }
+
+  /* Step row layout */
+  .step-row {
+    display: flex;
+    gap: var(--gap-x);
+    position: relative;
+    align-items: flex-start;
+  }
+  .step-row + .step-row { margin-top: 0; }
+
+  /* Global divider between phase rows */
+  .phase-divider {
+    margin: 8px 0;
+    border: none;
+    border-top: 1px dashed var(--border);
+    opacity: 0.5;
+  }
+
+  /* section header band */
+  .phase-header {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 0 8px 8px;
+    margin: 0 -40px;
+    padding-left: 40px;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 24px;
+  }
+  .phase-header-dot { width:8px;height:8px;border-radius:50%; flex-shrink:0; }
+  .phase-header-text { font-size: 10px; font-family: var(--mono); font-weight:600; letter-spacing:.1em; text-transform:uppercase; }
+  .phase-header-num { font-size:9px;color:var(--text-muted);font-family:var(--mono); }
+
+  /* ── Tooltip panel (detail panel on click) ── */
+  #detail-panel {
+    position: fixed;
+    right: 0; top: 0; bottom: 0;
+    width: 300px;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    padding: 24px;
+    z-index: 200;
+    transform: translateX(100%);
+    transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+    overflow-y: auto;
+  }
+  #detail-panel.open { transform: translateX(0); }
+  .panel-close {
+    position: absolute; top: 16px; right: 16px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text-secondary); border-radius: 6px;
+    width: 28px; height: 28px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .panel-tag { font-size:9px;font-family:var(--mono);color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px; }
+  .panel-title { font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:12px;line-height:1.3; }
+  .panel-section { margin-bottom:16px; }
+  .panel-section-title { font-size:9px;font-family:var(--mono);color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:4px; }
+  .panel-item { font-size:12px;color:var(--text-secondary);margin-bottom:6px;padding-left:12px;position:relative;line-height:1.5; }
+  .panel-item::before { content:'—';position:absolute;left:0;color:var(--text-muted); }
+  .panel-tech { display:inline-flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);padding:3px 8px;border-radius:4px;font-size:10px;font-family:var(--mono);color:var(--accent-teal);margin:2px; }
+
+  /* Portfolio Special Styles */
+  .port-card { background: linear-gradient(135deg, #1e2330 0%, #161922 100%); border: 1px solid var(--border); border-radius: 6px; padding: 8px; margin-top: 6px; }
+  .port-row { display: flex; justify-content: space-between; font-size: 9px; margin-bottom: 2px; }
+  .port-val { color: var(--accent-teal); font-family: var(--mono); font-weight: 600; }
+
+  /* Mock UI for portfolios and summaries */
+  .mock-ui { background: #000; border: 1px solid var(--border); border-radius: 8px; margin-top: 8px; overflow: hidden; }
+  .mock-header { background: #1a1a1a; padding: 4px 8px; font-size: 8px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+  .mock-content { padding: 8px; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width:4px; height:4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius:2px; }
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo-dot"></div>
+    <h1>Fintech LINE OA — UX/UI Flow</h1>
+    <span class="header-meta">v1.1 · สำหรับทีม UX/UI</span>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-purple)"></div>Agent Portal</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-teal)"></div>System / LINE OA</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-blue)"></div>Customer</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-amber)"></div>Exception</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent-red)"></div>Error / Expiry</div>
+  </div>
+</div>
+
+<!-- ── Canvas ── -->
+<div class="canvas-wrap">
+
+  <!-- Swimlane Headers -->
+  <div class="lane-headers">
+    <div class="lane-header agent" style="width:var(--lane-w)">🏢 Agent (Web Portal)</div>
+    <div style="width:var(--gap-x);flex-shrink:0"></div>
+    <div class="lane-header system" style="width:var(--lane-w)">⚙️ System / LINE OA</div>
+    <div style="width:var(--gap-x);flex-shrink:0"></div>
+    <div class="lane-header customer" style="width:var(--lane-w)">📱 Customer (LINE)</div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       PHASE 0: ENTRY — Rich Menu
+  ══════════════════════════════════════ -->
+  <div class="phase-header" style="margin-top:16px">
+    <div class="phase-header-dot" style="background:var(--accent-blue)"></div>
+    <span class="phase-header-text" style="color:var(--accent-blue)">Phase 0 — Entry Point</span>
+    <span class="phase-header-num">Rich Menu · LINE OA</span>
+  </div>
+
+  <div class="step-row">
+    <!-- Agent: empty -->
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-purple);opacity:0.4;pointer-events:none;min-height:180px">
+        <div class="node-tag">Standby</div>
+        <div class="node-title">รอรับ Request</div>
+        <div class="node-sub">Agent portal พร้อมใช้งาน</div>
+      </div>
+    </div>
+    <!-- gap -->
+    <div style="width:var(--gap-x);flex-shrink:0"></div>
+    <!-- System: Rich Menu layout -->
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-teal)" onclick="showDetail('rich-menu')">
+        <div class="node-step">0</div>
+        <div class="node-tag">LINE OA · Rich Menu</div>
+        <div class="node-title">6-Grid Rich Menu</div>
+        <div class="rich-menu-grid" style="margin-top:8px">
+          <div class="rm-cell highlight" onclick="event.stopPropagation();showDetail('pending')">
+            <div class="rm-icon">📋</div>
+            <div class="rm-label">Pending Orders</div>
+            <div class="rm-badge">3</div>
+          </div>
+          <div class="rm-cell" onclick="event.stopPropagation();showDetail('daily-summary')">
+            <div class="rm-icon">📊</div>
+            <div class="rm-label">Daily Summary</div>
+          </div>
+          <div class="rm-cell" onclick="event.stopPropagation();showDetail('portfolio')">
+            <div class="rm-icon">💼</div>
+            <div class="rm-label">My Portfolio</div>
+          </div>
+          <div class="rm-cell" onclick="event.stopPropagation();showDetail('open-app')">
+            <div class="rm-icon">📲</div>
+            <div class="rm-label">Open App</div>
+          </div>
+          <div class="rm-cell" onclick="event.stopPropagation();showDetail('privileges')">
+            <div class="rm-icon">⭐</div>
+            <div class="rm-label">Privileges</div>
+          </div>
+          <div class="rm-cell" onclick="event.stopPropagation();showDetail('contact-cs')">
+            <div class="rm-icon">💬</div>
+            <div class="rm-label">Contact CS</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- gap -->
+    <div style="width:var(--gap-x);flex-shrink:0"></div>
+    <!-- Customer: sees Rich Menu -->
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-blue)" onclick="showDetail('customer-entry')">
+        <div class="node-step">0</div>
+        <div class="node-tag">Customer · LINE App</div>
+        <div class="node-title">เปิด LINE OA</div>
+        <div class="node-sub">เห็น Rich Menu ด้านล่าง · กด "Pending Orders"</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       PHASE 1: AGENT INITIATION
+  ══════════════════════════════════════ -->
+  <div class="phase-header">
+    <div class="phase-header-dot" style="background:var(--accent-purple)"></div>
+    <span class="phase-header-text" style="color:var(--accent-purple)">Phase 1 — Agent Initiation</span>
+    <span class="phase-header-num">Web Portal · Fund Transaction</span>
+  </div>
+
+  <div class="step-row">
+    <div class="lane" style="width:var(--lane-w)">
+      <!-- Step 1 -->
+      <div class="node" style="--node-color:var(--accent-purple)" onclick="showDetail('agent-select')">
+        <div class="node-step">1</div>
+        <div class="node-tag">Agent · Web Portal</div>
+        <div class="node-title">เลือก Customer Account</div>
+        <div class="node-sub">ค้นหาลูกค้า · เลือก Account (บุคคล / นิติบุคคล / ร่วม)</div>
+      </div>
+      <!-- connector -->
+      <div class="v-conn"></div>
+      <!-- Step 2 -->
+      <div class="node" style="--node-color:var(--accent-purple)" onclick="showDetail('agent-trade')">
+        <div class="node-step">2</div>
+        <div class="node-tag">Agent · Web Portal</div>
+        <div class="node-title">กรอกรายละเอียดคำสั่ง</div>
+        <div class="node-sub">ประเภท: Buy / Sell / Switch · ชื่อกองทุน · จำนวน</div>
+      </div>
+      <!-- connector -->
+      <div class="v-conn"></div>
+      <!-- Step 3 -->
+      <div class="node" style="--node-color:var(--accent-purple)" onclick="showDetail('agent-trigger')">
+        <div class="node-step">3</div>
+        <div class="node-tag">Agent · Web Portal</div>
+        <div class="node-title">กด "ส่งขอการยืนยัน"</div>
+        <div class="node-sub">สถานะ → <span class="badge pending">⏳ Pending</span></div>
+      </div>
+    </div>
+
+    <div style="width:var(--gap-x);flex-shrink:0;display:flex;align-items:center;padding-top:80px">
+      <div style="width:100%;height:2px;background:linear-gradient(90deg,var(--accent-purple),var(--accent-teal));position:relative">
+        <div style="position:absolute;right:-6px;top:-4px;color:var(--accent-teal);font-size:10px">▶</div>
+        <div style="position:absolute;left:50%;top:-18px;transform:translateX(-50%);font-size:9px;font-family:var(--mono);color:var(--text-muted);white-space:nowrap">API Request</div>
+      </div>
+    </div>
+
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-teal);margin-top:80px" onclick="showDetail('system-receive')">
+        <div class="node-step">3</div>
+        <div class="node-tag">Backend System</div>
+        <div class="node-title">รับ Request · Validate</div>
+        <div class="node-sub">ตรวจสอบข้อมูล · บันทึกคำสั่ง · เริ่ม TTL Timer</div>
+      </div>
+    </div>
+
+    <div style="width:var(--gap-x);flex-shrink:0"></div>
+    <div class="lane" style="width:var(--lane-w)">
+      <!-- empty in this phase -->
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       PHASE 2: NOTIFICATION
+  ══════════════════════════════════════ -->
+  <div class="phase-header">
+    <div class="phase-header-dot" style="background:var(--accent-teal)"></div>
+    <span class="phase-header-text" style="color:var(--accent-teal)">Phase 2 — Push Notification</span>
+    <span class="phase-header-num">LINE Flex Message</span>
+  </div>
+
+  <div class="step-row">
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-purple);opacity:0.5;pointer-events:none;min-height:260px">
+        <div class="node-tag">Waiting</div>
+        <div class="node-title">รอสถานะ</div>
+        <div class="node-sub">Dashboard แสดง <span class="badge pending">⏳ Pending</span></div>
+      </div>
+    </div>
+    <div style="width:var(--gap-x);flex-shrink:0"></div>
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-teal)" onclick="showDetail('system-flex')">
+        <div class="node-step">4</div>
+        <div class="node-tag">LINE Messaging API</div>
+        <div class="node-title">สร้าง &amp; ส่ง Flex Message</div>
+        <div class="node-sub">Push to LINE User ID · แสดงรายละเอียดครบถ้วน</div>
+      </div>
+      <div class="v-conn"></div>
+      <div class="node" style="--node-color:var(--accent-amber)" onclick="showDetail('timer')">
+        <div class="node-step">4b</div>
+        <div class="node-tag">Background Job</div>
+        <div class="node-title">TTL Timer เริ่มนับ</div>
+        <div class="node-sub">T+15 min → Reminder 1 · T+30 min → Reminder 2</div>
+      </div>
+    </div>
+    <div style="width:var(--gap-x);flex-shrink:0;display:flex;align-items:center;padding-top:0px">
+      <div style="width:100%;height:2px;background:linear-gradient(90deg,var(--accent-teal),var(--accent-blue));position:relative">
+        <div style="position:absolute;right:-6px;top:-4px;color:var(--accent-blue);font-size:10px">▶</div>
+        <div style="position:absolute;left:50%;top:-18px;transform:translateX(-50%);font-size:9px;font-family:var(--mono);color:var(--text-muted);white-space:nowrap">Push Notif.</div>
+      </div>
+    </div>
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-blue)" onclick="showDetail('customer-flex')">
+        <div class="node-step">4</div>
+        <div class="node-tag">Customer · LINE</div>
+        <div class="node-title">รับ Flex Message</div>
+        <!-- Flex message mockup -->
+        <div class="flex-msg" onclick="event.stopPropagation()">
+          <div class="flex-header">
+            <span class="flex-header-title">🔔 คำขอยืนยันรายการ</span>
+            <span class="flex-header-badge">BUY</span>
+          </div>
+          <div class="flex-body">
+            <div class="flex-fund">กองทุน TMBAMEASTSPRING</div>
+            <div class="flex-row"><span>Account</span><strong>บัญชีบุคคล 001</strong></div>
+            <div class="flex-row"><span>จำนวน</span><strong>50,000 บาท</strong></div>
+            <div class="flex-row"><span>วันที่</span><strong>07/05/2026</strong></div>
+            <hr class="flex-divider">
+            <button class="flex-cta" onclick="showDetail('customer-flex')">ดูรายละเอียด →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       PHASE 3: CUSTOMER REVIEW & CONFIRM
+  ══════════════════════════════════════ -->
+  <div class="phase-header">
+    <div class="phase-header-dot" style="background:var(--accent-blue)"></div>
+    <span class="phase-header-text" style="color:var(--accent-blue)">Phase 3 — Customer Review &amp; Confirm</span>
+    <span class="phase-header-num">LIFF · Account Selector · Authorization</span>
+  </div>
+
+  <div class="step-row">
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-purple);opacity:0.5;pointer-events:none;min-height:340px">
+        <div class="node-tag">Waiting</div>
+        <div class="node-title">รอ Customer ยืนยัน</div>
+        <div class="node-sub">Dashboard แสดง <span class="badge pending">⏳ Pending</span></div>
+      </div>
+    </div>
+    <div style="width:var(--gap-x);flex-shrink:0"></div>
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-teal)" onclick="showDetail('liff-server')">
+        <div class="node-step">5</div>
+        <div class="node-tag">LIFF Server</div>
+        <div class="node-title">เปิด LIFF Page</div>
+        <div class="node-sub">Verify LINE Token · โหลดรายละเอียดคำสั่ง</div>
+      </div>
+    </div>
+    <div style="width:var(--gap-x);flex-shrink:0"></div>
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-blue)" onclick="showDetail('liff-review')">
+        <div class="node-step">5</div>
+        <div class="node-tag">Customer · LIFF</div>
+        <div class="node-title">ตรวจสอบรายการ</div>
+        <div class="node-sub">กรณีใกล้ cutoff ให้การ์ดคำขอเปลี่ยนเป็นสีแดง</div>
+        <!-- Account selector (multi-account) -->
+        <div style="margin:8px 0;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px">
+          <div style="font-size:9px;color:var(--text-muted);font-family:var(--mono);margin-bottom:4px">ACCOUNT SELECTOR</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap">
+            <div style="background:rgba(74,158,255,0.15);border:1px solid var(--accent-blue);border-radius:4px;padding:3px 8px;font-size:9px;color:var(--accent-blue)">✓ บุคคล 001</div>
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:9px;color:var(--text-muted)">นิติบุคคล</div>
+          </div>
+        </div>
+        <!-- LIFF mock -->
+        <div class="liff-mock near-expiry" onclick="event.stopPropagation()">
+          <div class="liff-topbar">
+            <div class="liff-dot" style="background:#ff5f57"></div>
+            <div class="liff-dot" style="background:#febc2e"></div>
+            <div class="liff-dot" style="background:#28c840"></div>
+            <span style="margin-left:4px">liff.line.me/confirm</span>
+          </div>
+          <div class="liff-warning">คำขอยืนยันรายการใกล้ถึง cutoff แล้ว — โปรดยืนยันหรือปฏิเสธทันที</div>
+          <div class="liff-body">
+            <div class="liff-row"><span class="liff-key">ประเภท</span><span class="liff-val">BUY</span></div>
+            <div class="liff-row"><span class="liff-key">กองทุน</span><span class="liff-val">TMBAMEASTSPRING</span></div>
+            <div class="liff-row"><span class="liff-key">จำนวน</span><span class="liff-val">50,000 ฿</span></div>
+            <div class="liff-row"><span class="liff-key">Account</span><span class="liff-val">บุคคล 001</span></div>
+            <button class="liff-btn confirm">✓ ยืนยันรายการ</button>
+            <button class="liff-btn reject">✕ ปฏิเสธ</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       PHASE 4: HAPPY PATH — SUCCESS
+  ══════════════════════════════════════ -->
+  <div class="phase-header">
+    <div class="phase-header-dot" style="background:var(--accent-teal)"></div>
+    <span class="phase-header-text" style="color:var(--accent-teal)">Phase 4A — Happy Path · Success</span>
+    <span class="phase-header-num">Webhook · Real-time Sync</span>
+  </div>
+
+  <div class="step-row">
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-purple)" onclick="showDetail('agent-success')">
+        <div class="node-step">7</div>
+        <div class="node-tag">Agent · Web Portal</div>
+        <div class="node-title">รับ Webhook Real-time</div>
+        <div class="node-sub">Status อัปเดตเป็น <span class="badge success">✓ Success</span> ทันที</div>
+      </div>
+    </div>
+    <div style="width:var(--gap-x);flex-shrink:0;display:flex;align-items:center">
+      <div style="width:100%;height:2px;background:linear-gradient(90deg,var(--accent-teal),var(--accent-purple));position:relative">
+        <div style="position:absolute;left:-6px;top:-4px;color:var(--accent-purple);font-size:10px;transform:rotate(180deg)">▶</div>
+        <div style="position:absolute;left:50%;top:-18px;transform:translateX(-50%);font-size:9px;font-family:var(--mono);color:var(--text-muted);white-space:nowrap">Webhook</div>
+      </div>
+    </div>
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-teal)" onclick="showDetail('system-process')">
+        <div class="node-step">6</div>
+        <div class="node-tag">Backend System</div>
+        <div class="node-title">ประมวลผล Confirmation</div>
+        <div class="node-sub">บันทึกคำสั่ง · ส่ง Webhook → Agent · ส่ง Receipt → Customer</div>
+      </div>
+    </div>
+    <div style="width:var(--gap-x);flex-shrink:0;display:flex;align-items:center">
+      <div style="width:100%;height:2px;background:linear-gradient(90deg,var(--accent-blue),var(--accent-teal));position:relative">
+        <div style="position:absolute;left:-6px;top:-4px;color:var(--accent-teal);font-size:10px;transform:rotate(180deg)">▶</div>
+        <div style="position:absolute;left:50%;top:-18px;transform:translateX(-50%);font-size:9px;font-family:var(--mono);color:var(--text-muted);white-space:nowrap">Confirm Event</div>
+      </div>
+    </div>
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-blue)" onclick="showDetail('customer-confirm')">
+        <div class="node-step">6</div>
+        <div class="node-tag">Customer · LIFF</div>
+        <div class="node-title">กด "ยืนยันรายการ"</div>
+        <div class="node-sub">ส่ง Confirm Event → System · รับ Receipt</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       PHASE 4B: REJECT PATH
+  ══════════════════════════════════════ -->
+  <div class="phase-header">
+    <div class="phase-header-dot" style="background:var(--accent-red)"></div>
+    <span class="phase-header-text" style="color:var(--accent-red)">Phase 4B — Reject Path</span>
+    <span class="phase-header-num">Customer ปฏิเสธ</span>
+  </div>
+
+  <div class="step-row">
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-red)" onclick="showDetail('agent-reject')">
+        <div class="node-step">R</div>
+        <div class="node-tag">Agent · Web Portal</div>
+        <div class="node-title">รับแจ้ง Rejected</div>
+        <div class="node-sub">Status → <span class="badge rejected">✕ Rejected</span> · Follow-up ลูกค้า</div>
+      </div>
+    </div>
+    <div style="width:var(--gap-x);flex-shrink:0;display:flex;align-items:center">
+      <div style="width:100%;height:2px;background:linear-gradient(90deg,rgba(239,83,80,0.6),rgba(239,83,80,0.2));position:relative">
+        <div style="position:absolute;left:-6px;top:-4px;color:var(--accent-red);font-size:10px;transform:rotate(180deg)">▶</div>
+        <div style="position:absolute;left:50%;top:-18px;transform:translateX(-50%);font-size:9px;font-family:var(--mono);color:var(--accent-red);white-space:nowrap">Webhook (Rejected)</div>
+      </div>
+    </div>
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-red)" onclick="showDetail('system-reject')">
+        <div class="node-step">R</div>
+        <div class="node-tag">Backend System</div>
+        <div class="node-title">อัปเดต Status</div>
+        <div class="node-sub">Order → Rejected · ยกเลิก TTL Timer · แจ้ง Agent</div>
+      </div>
+    </div>
+    <div style="width:var(--gap-x);flex-shrink:0;display:flex;align-items:center">
+      <div style="width:100%;height:2px;background:linear-gradient(90deg,rgba(239,83,80,0.2),rgba(239,83,80,0.6));position:relative">
+        <div style="position:absolute;left:-6px;top:-4px;color:var(--accent-red);font-size:10px;transform:rotate(180deg)">▶</div>
+        <div style="position:absolute;left:50%;top:-18px;transform:translateX(-50%);font-size:9px;font-family:var(--mono);color:var(--accent-red);white-space:nowrap">Reject Event</div>
+      </div>
+    </div>
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-red)" onclick="showDetail('customer-reject')">
+        <div class="node-step">R</div>
+        <div class="node-tag">Customer · LIFF</div>
+        <div class="node-title">กด "ปฏิเสธ"</div>
+        <div class="node-sub">LIFF ปิด · LINE ส่ง "ยกเลิกแล้ว" notification</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       PHASE 4C: EXPIRY EXCEPTION
+  ══════════════════════════════════════ -->
+  <div class="phase-header">
+    <div class="phase-header-dot" style="background:var(--accent-amber)"></div>
+    <span class="phase-header-text" style="color:var(--accent-amber)">Phase 4C — Exception: Inaction &amp; Expiry</span>
+    <span class="phase-header-num">Smart Reminder · TTL · Auto-Cancel</span>
+  </div>
+
+  <div class="step-row">
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-red)" onclick="showDetail('agent-expired')">
+        <div class="node-step">E</div>
+        <div class="node-tag">Agent · Web Portal</div>
+        <div class="node-title">รับแจ้ง Expired</div>
+        <div class="node-sub">Status → <span class="badge expired">⏰ Expired</span> · Alert · Follow-up</div>
+      </div>
+    </div>
+    <div style="width:var(--gap-x);flex-shrink:0;display:flex;align-items:center">
+      <div style="width:100%;height:2px;background:linear-gradient(90deg,rgba(245,166,35,0.5),rgba(245,166,35,0.2));position:relative">
+        <div style="position:absolute;left:-6px;top:-4px;color:var(--accent-amber);font-size:10px;transform:rotate(180deg)">▶</div>
+        <div style="position:absolute;left:50%;top:-18px;transform:translateX(-50%);font-size:9px;font-family:var(--mono);color:var(--accent-amber);white-space:nowrap">Webhook (Expired)</div>
+      </div>
+    </div>
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-amber)" onclick="showDetail('system-reminder')">
+        <div class="node-step">E1</div>
+        <div class="node-tag">Background Job · TTL</div>
+        <div class="node-title">Smart Reminder</div>
+        <div class="node-sub">T+15 min: Push Reminder 1 · T+30 min: Push Reminder 2 · ใกล้หมดอายุเปลี่ยนเป็นแดง</div>
+      </div>
+      <div class="v-conn"></div>
+      <div class="node" style="--node-color:var(--accent-red)" onclick="showDetail('system-expire')">
+        <div class="node-step">E2</div>
+        <div class="node-tag">Backend System · Auto</div>
+        <div class="node-title">TTL หมดอายุ → Auto-Cancel</div>
+        <div class="node-sub">Order → Expired · ล็อค Order ID · แจ้ง Agent ทันที</div>
+      </div>
+    </div>
+    <div style="width:var(--gap-x);flex-shrink:0;display:flex;align-items:center;padding-top:0">
+      <div style="width:100%;height:2px;background:linear-gradient(90deg,var(--accent-teal),rgba(245,166,35,0.6));position:relative">
+        <div style="position:absolute;right:-6px;top:-4px;color:rgba(245,166,35,0.8);font-size:10px">▶</div>
+        <div style="position:absolute;left:50%;top:-18px;transform:translateX(-50%);font-size:9px;font-family:var(--mono);color:var(--text-muted);white-space:nowrap">Reminder Push</div>
+      </div>
+    </div>
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-amber)" onclick="showDetail('customer-reminder')">
+        <div class="node-step">E1</div>
+        <div class="node-tag">Customer · LINE</div>
+        <div class="node-title">รับ Reminder Notification</div>
+        <div class="node-sub">T+15 และ T+30 min · กลับมายืนยันยังทำได้</div>
+      </div>
+      <div class="v-conn"></div>
+      <div class="node" style="--node-color:var(--accent-red)" onclick="showDetail('customer-expired-liff')">
+        <div class="node-step">E2</div>
+        <div class="node-tag">Customer · LIFF</div>
+        <div class="node-title">เปิด Link หลังหมดอายุ</div>
+        <!-- Expired LIFF mock -->
+        <div class="liff-mock" onclick="event.stopPropagation()">
+          <div class="liff-topbar">
+            <div class="liff-dot" style="background:#ff5f57"></div>
+            <div class="liff-dot" style="background:#febc2e"></div>
+            <div class="liff-dot" style="background:#28c840"></div>
+            <span style="margin-left:4px">liff.line.me/confirm</span>
+          </div>
+          <div class="liff-body" style="text-align:center;padding:16px">
+            <div style="font-size:24px;margin-bottom:6px">⏰</div>
+            <div style="font-size:12px;font-weight:700;color:var(--accent-red);margin-bottom:4px">รายการหมดอายุแล้ว</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-bottom:10px">คำสั่งนี้ถูกยกเลิกอัตโนมัติ<br>กรุณาติดต่อ Agent ของท่าน</div>
+            <button class="liff-btn expired" disabled>ยืนยันไม่ได้ (หมดอายุ)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       PHASE 5A: MY PORTFOLIO (DYNAMIC LOOKUP)
+  ══════════════════════════════════════ -->
+  <div class="phase-header">
+    <div class="phase-header-dot" style="background:var(--accent-teal)"></div>
+    <span class="phase-header-text" style="color:var(--accent-teal)">Phase 5A — My Portfolio (Dynamic Lookup)</span>
+    <span class="phase-header-num">LIFF · Multi-Account View</span>
+  </div>
+
+  <div class="step-row">
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-purple);opacity:0.5;pointer-events:none;min-height:240px">
+        <div class="node-tag">Data Source</div>
+        <div class="node-title">Core Banking Sync</div>
+        <div class="node-sub">ข้อมูลพอร์ตอัปเดตจากระบบหลังบ้าน</div>
+      </div>
+    </div>
+    <div style="width:var(--gap-x);flex-shrink:0"></div>
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-teal)" onclick="showDetail('port-logic')">
+        <div class="node-step">1</div>
+        <div class="node-tag">LIFF Auth</div>
+        <div class="node-title">Verify & Fetch Accounts</div>
+        <div class="node-sub">ดึงรายการบัญชีทั้งหมดที่ผูกกับ LINE ID</div>
+      </div>
+      <div class="v-conn"></div>
+      <div class="node" style="--node-color:var(--accent-teal)" onclick="showDetail('port-data')">
+        <div class="node-step">3</div>
+        <div class="node-tag">Portfolio API</div>
+        <div class="node-title">Calculate Net Worth</div>
+        <div class="node-sub">ดึง NAV, กำไร/ขาดทุน และสัดส่วนกองทุน</div>
+      </div>
+    </div>
+    <div style="width:var(--gap-x);flex-shrink:0;display:flex;align-items:center;padding-top:80px">
+      <div style="width:100%;height:2px;background:linear-gradient(90deg,var(--accent-teal),var(--accent-blue));position:relative">
+        <div style="position:absolute;right:-6px;top:-4px;color:var(--accent-blue);font-size:10px">▶</div>
+        <div style="position:absolute;left:50%;top:-18px;transform:translateX(-50%);font-size:9px;font-family:var(--mono);color:var(--text-muted);white-space:nowrap">Account Data</div>
+      </div>
+    </div>
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-blue);margin-top:80px" onclick="showDetail('port-ui')">
+        <div class="node-step">2</div>
+        <div class="node-tag">LIFF View</div>
+        <div class="node-title">Account Selector</div>
+        <div class="mock-ui" onclick="event.stopPropagation()">
+          <div class="mock-header">Select Account</div>
+          <div class="mock-content">
+            <div style="font-size:9px; border:1px solid var(--accent-blue); padding:4px; border-radius:4px; margin-bottom:4px">✓ บัญชีบุคคล 001</div>
+            <div style="font-size:9px; border:1px solid var(--border); padding:4px; border-radius:4px; opacity:0.6">บัญชีร่วม 002</div>
+          </div>
+        </div>
+      </div>
+      <div class="v-conn"></div>
+      <div class="node" style="--node-color:var(--accent-blue)" onclick="showDetail('port-dashboard')">
+        <div class="node-step">4</div>
+        <div class="node-tag">LIFF View</div>
+        <div class="node-title">Portfolio Dashboard</div>
+        <div class="port-card" onclick="event.stopPropagation()">
+          <div class="port-row"><span>Total Value</span><span class="port-val">1,250,000.00</span></div>
+          <div class="port-row"><span>Gain/Loss</span><span class="port-val" style="color:var(--accent-teal)">+4.2%</span></div>
+          <div style="height:4px; background:#333; margin-top:6px; border-radius:2px; overflow:hidden">
+            <div style="width:70%; height:100%; background:var(--accent-teal)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       PHASE 5B: DAILY SUMMARY (TRANSACTION REPORT)
+  ══════════════════════════════════════ -->
+  <div class="phase-header">
+    <div class="phase-header-dot" style="background:var(--accent-amber)"></div>
+    <span class="phase-header-text" style="color:var(--accent-amber)">Phase 5B — Daily Summary (Transaction Report)</span>
+    <span class="phase-header-num">Auto @ 15:30 · Account Selector · Self-Service</span>
+  </div>
+
+  <!-- Step 1: Auto-Generation Scheduler -->
+  <div class="step-row">
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-purple);opacity:0.5;pointer-events:none;min-height:120px">
+        <div class="node-tag">Agent Portal</div>
+        <div class="node-title">Report Dashboard</div>
+        <div class="node-sub">ดูประวัติรายงานที่สร้างทั้งหมด</div>
+      </div>
+    </div>
+    <div style="width:var(--gap-x);flex-shrink:0"></div>
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-amber)" onclick="showDetail('summary-scheduler')">
+        <div class="node-step">1</div>
+        <div class="node-tag">Cron Job · Auto</div>
+        <div class="node-title">Scheduled Generation</div>
+        <div class="node-sub">⏰ Every day @ 15:30 · ค้นหาบัญชีทั้งหมดและสร้างรายงาน</div>
+      </div>
+    </div>
+    <div style="width:var(--gap-x);flex-shrink:0"></div>
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-blue)" onclick="showDetail('summary-notify')">
+        <div class="node-step">1</div>
+        <div class="node-tag">Customer · LINE</div>
+        <div class="node-title">Notif: Report Ready</div>
+        <div class="node-sub">📨 รับแจ้งว่ารายงานวันนี้พร้อมแล้ว</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2: Account Selection & Report View -->
+  <div class="step-row">
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-purple);opacity:0.3;pointer-events:none;min-height:100px">
+      </div>
+    </div>
+    <div style="width:var(--gap-x);flex-shrink:0"></div>
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-teal)" onclick="showDetail('summary-storage')">
+        <div class="node-step">2</div>
+        <div class="node-tag">Report Storage</div>
+        <div class="node-title">Store Reports by Account</div>
+        <div class="node-sub">เก็บรายงานแต่ละ Account ไว้ใน Database</div>
+      </div>
+    </div>
+    <div style="width:var(--gap-x);flex-shrink:0;display:flex;align-items:center;padding-top:40px">
+      <div style="width:100%;height:2px;background:linear-gradient(90deg,var(--accent-teal),var(--accent-blue));position:relative">
+        <div style="position:absolute;right:-6px;top:-4px;color:var(--accent-blue);font-size:10px">▶</div>
+        <div style="position:absolute;left:50%;top:-18px;transform:translateX(-50%);font-size:9px;font-family:var(--mono);color:var(--text-muted);white-space:nowrap">Fetch Report</div>
+      </div>
+    </div>
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-blue)" onclick="showDetail('summary-selector')">
+        <div class="node-step">2</div>
+        <div class="node-tag">LIFF View</div>
+        <div class="node-title">Account Selector</div>
+        <div class="mock-ui" onclick="event.stopPropagation()">
+          <div class="mock-header">เลือก Account</div>
+          <div class="mock-content">
+            <div style="font-size:9px; border:1px solid var(--accent-blue); padding:4px; border-radius:4px; margin-bottom:4px">✓ บัญชีบุคคล 001</div>
+            <div style="font-size:9px; border:1px solid var(--border); padding:4px; border-radius:4px; opacity:0.6">บัญชีร่วม 002</div>
+            <div style="font-size:9px; border:1px solid var(--border); padding:4px; border-radius:4px; opacity:0.6">นิติบุคคล 003</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3: Report Display -->
+  <div class="step-row">
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-purple);opacity:0.3;pointer-events:none;min-height:80px">
+      </div>
+    </div>
+    <div style="width:var(--gap-x);flex-shrink:0"></div>
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-teal)" onclick="showDetail('summary-logic')">
+        <div class="node-step">3</div>
+        <div class="node-tag">Report Engine</div>
+        <div class="node-title">Generate Report View</div>
+        <div class="node-sub">Compile filtered data ตามบัญชีที่เลือก</div>
+      </div>
+    </div>
+    <div style="width:var(--gap-x);flex-shrink:0;display:flex;align-items:center">
+      <div style="width:100%;height:2px;background:linear-gradient(90deg,var(--accent-teal),var(--accent-blue));position:relative">
+        <div style="position:absolute;right:-6px;top:-4px;color:var(--accent-blue);font-size:10px">▶</div>
+        <div style="position:absolute;left:50%;top:-18px;transform:translateX(-50%);font-size:9px;font-family:var(--mono);color:var(--text-muted);white-space:nowrap">Display</div>
+      </div>
+    </div>
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-blue)" onclick="showDetail('summary-ui')">
+        <div class="node-step">3</div>
+        <div class="node-tag">LIFF View</div>
+        <div class="node-title">Daily Execution List</div>
+        <div class="mock-ui" onclick="event.stopPropagation()">
+          <div class="mock-header">Summary: 07/05/2026</div>
+          <div class="mock-content">
+            <div style="font-size:8px; margin-bottom:4px; display:flex; justify-content:space-between">
+              <span>BUY: K-CASH</span><span style="color:var(--accent-teal)">SUCCESS</span>
+            </div>
+            <div style="font-size:8px; display:flex; justify-content:space-between">
+              <span>SELL: SCBGP</span><span style="color:var(--accent-red)">REJECTED</span>
+            </div>
+            <div style="font-size:8px; margin-top:6px; padding-top:4px; border-top:1px solid var(--border); display:flex; justify-content:space-between">
+              <span style="color:var(--text-muted)">Total: 2</span>
+              <span style="color:var(--accent-teal)">1 Success</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Detail Panel ── -->
+<div id="detail-panel">
+  <button class="panel-close" onclick="closePanel()">✕</button>
+  <div id="panel-content"></div>
+</div>
+
+<script>
+const details = {
+  'rich-menu': {
+    tag: 'LINE OA · Rich Menu', title: '6-Grid Rich Menu',
+    sections: [
+      { title: 'วัตถุประสงค์', items: ['จุดเข้าถึงหลักสำหรับ Customer บน LINE OA','แบ่งเป็น 6 ช่อง แต่ละช่องเข้าถึงฟีเจอร์ที่ต่างกัน'] },
+      { title: 'Slots', items: ['📋 Pending Orders — ดู/อนุมัติ/ปฏิเสธรายการที่รอ','📊 Daily Summary — สรุปรายการทั้งวัน','💼 My Portfolio — ดูพอร์ตโฟลิโอ (มี Account Selector)','📲 Open App — Deep link เปิด Mobile App','⭐ Privileges — Loyalty/Wealth segment portal','💬 Contact CS — 1-on-1 Chat หรือ VoIP call'] },
+      { title: 'Tech', items: [] }
+    ],
+    tech: ['LINE Rich Menu API','Webhook','LIFF']
+  },
+  'pending': {
+    tag: 'Rich Menu Slot 1', title: 'Pending Orders',
+    sections: [
+      { title: 'หน้าที่', items: ['แสดงรายการที่รอการยืนยันจาก Agent','Customer สามารถ Approve หรือ Reject แต่ละรายการ','แสดง Badge นับจำนวนรายการที่รอ'] },
+      { title: 'UX Note', items: ['เรียงตาม TTL ที่เหลือ (ใกล้หมดขึ้นก่อน)','แสดงสีแดงเมื่อ TTL เหลือ < 5 นาที'] }
+    ],
+    tech: ['LIFF Page','LINE Flex Message']
+  },
+  'agent-select': {
+    tag: 'Phase 1 · Step 1', title: 'Agent เลือก Customer Account',
+    sections: [
+      { title: 'Flow', items: ['ค้นหาลูกค้าด้วยชื่อ/รหัส/เลขบัตร','เลือก Account ที่ต้องการ (1 User อาจมีหลาย Account)','ประเภท Account: บุคคล / นิติบุคคล / ร่วม (Joint)'] },
+      { title: 'UX Note', items: ['ควรแสดง Account type badge ให้ชัด','แสดง Account balance แบบ masked'] }
+    ],
+    tech: ['Web Portal','REST API','JWT Auth']
+  },
+  'agent-trade': {
+    tag: 'Phase 1 · Step 2', title: 'กรอกรายละเอียดคำสั่ง',
+    sections: [
+      { title: 'Fields', items: ['ประเภทคำสั่ง: Buy / Sell / Switch','ชื่อกองทุน (Fund Code)','จำนวนเงิน หรือ จำนวนหน่วย','วันที่มีผล (Trade Date)'] },
+      { title: 'Validation', items: ['ตรวจ Cut-off time ก่อน Submit','ตรวจ Account eligibility'] }
+    ],
+    tech: ['Web Portal Form','Fund Master API']
+  },
+  'agent-trigger': {
+    tag: 'Phase 1 · Step 3', title: 'ส่งขอการยืนยัน',
+    sections: [
+      { title: 'Action', items: ['Agent กด Submit → ระบบสร้าง Order ID','Order Status → Pending','TTL Timer เริ่มนับทันที'] },
+      { title: 'UX State', items: ['ปุ่ม Submit กลายเป็น disabled ระหว่างรอ','แสดง Countdown timer บนหน้า Agent'] }
+    ],
+    tech: ['REST API POST /orders','Background Job Queue']
+  },
+  'system-flex': {
+    tag: 'Phase 2 · Step 4', title: 'สร้าง & ส่ง LINE Flex Message',
+    sections: [
+      { title: 'Message Content', items: ['ประเภทรายการ (Buy/Sell/Switch)','ชื่อกองทุน + จำนวน','Account ที่ใช้','ปุ่ม "ดูรายละเอียด" → เปิด LIFF'] },
+      { title: 'Delivery', items: ['ส่งผ่าน LINE Messaging API (Push)','ใช้ LINE User ID ของลูกค้า'] }
+    ],
+    tech: ['LINE Messaging API','Flex Message JSON','Push Message']
+  },
+  'timer': {
+    tag: 'Background Job', title: 'TTL Timer & Smart Reminder',
+    sections: [
+      { title: 'Schedule', items: ['T+0: Order สร้าง → Timer เริ่ม','T+15 min: ส่ง Reminder Notification ครั้งที่ 1','T+30 min: ส่ง Reminder Notification ครั้งที่ 2','T=Cut-off: Auto-Cancel → Status Expired'] },
+      { title: 'UX', items: ['Reminder แสดง countdown ที่เหลือ','LIFF แสดง progress bar เวลาที่เหลือ'] }
+    ],
+    tech: ['Job Queue (Bull/BullMQ)','Redis TTL','LINE Push API']
+  },
+  'liff-review': {
+    tag: 'Phase 3 · Step 5', title: 'Customer Review บน LIFF',
+    sections: [
+      { title: 'LIFF Page Content', items: ['Account Selector (กรณีมีหลาย account)','รายละเอียดคำสั่งครบถ้วน','TTL Countdown timer','ปุ่ม "ยืนยัน" และ "ปฏิเสธ"'] },
+      { title: 'UX Note', items: ['เมื่อคำขอยืนยันใกล้ cutoff ให้เปลี่ยนการ์ดคำขอเป็นสีแดง','แสดง alert/timer ที่ชัดเจนเพื่อกระตุ้นการตัดสินใจ'] },
+      { title: 'Security', items: ['Verify LINE Access Token ก่อนแสดงข้อมูล','ตรวจว่า Order ยังไม่หมดอายุ','1 Link = 1 Order = ใช้ได้ครั้งเดียว'] }
+    ],
+    tech: ['LIFF SDK','LINE Login','JWT Verify']
+  },
+  'system-reminder': {
+    tag: 'Exception Path · E1', title: 'Smart Reminder System',
+    sections: [
+      { title: 'Logic', items: ['ตรวจทุก 1 นาที ว่า Order ไหนใกล้หมดอายุ','ส่ง Push Notification ตาม Schedule','ถ้า Customer ยืนยัน → ยกเลิก Reminder ทันที'] },
+      { title: 'Message', items: ['แสดงเวลาที่เหลือ','Deep link กลับไปยัง LIFF เดิม'] },
+      { title: 'UX Note', items: ['ก่อนหมดอายุ < 5 นาที ให้เปลี่ยนสถานะเป็นสีแดง','แสดง Alert ชัดเจนเพื่อกระตุ้นให้ลูกค้าดำเนินการทันที'] }
+    ],
+    tech: ['Cron Job','Redis TTL','LINE Push API']
+  },
+  'system-expire': {
+    tag: 'Exception Path · E2', title: 'Auto-Cancel เมื่อหมดอายุ',
+    sections: [
+      { title: 'Flow', items: ['TTL หมด → Order Status → Expired','ล็อค Order ID ไม่ให้ยืนยันได้อีก','ส่ง Webhook แจ้ง Agent ทันที','ส่ง LINE Notification แจ้ง Customer'] },
+      { title: 'LIFF Behavior', items: ['ถ้าเปิด Link → แสดงหน้า "หมดอายุ"','ซ่อน/Disable ปุ่ม Confirm และ Reject'] }
+    ],
+    tech: ['Redis TTL Expire Event','Webhook','LINE Push API']
+  },
+  'customer-flex': {
+    tag: 'Phase 2 · Customer', title: 'Customer รับ Flex Message',
+    sections: [
+      { title: 'Message ประกอบด้วย', items: ['หัวข้อ + ประเภทคำสั่ง (BUY/SELL/SWITCH)','ชื่อกองทุน + Account + จำนวน','ปุ่ม CTA: "ดูรายละเอียด" → เปิด LIFF'] },
+      { title: 'UX Note', items: ['Flex Message ควรมีสีตามประเภท (Buy=เขียว, Sell=แดง)','แสดง TTL countdown ใน message ด้วย'] }
+    ],
+    tech: ['LINE Flex Message','LIFF deeplink']
+  },
+  'agent-success': {
+    tag: 'Phase 4A · Success', title: 'Agent รับ Success via Webhook',
+    sections: [
+      { title: 'Real-time Update', items: ['Webhook POST ไปยัง Agent Portal ทันทีที่ Customer ยืนยัน','Dashboard อัปเดต Status โดยไม่ต้อง Refresh','แสดง Toast notification: "ลูกค้ายืนยันแล้ว"'] }
+    ],
+    tech: ['Webhook','WebSocket / SSE','Real-time Dashboard']
+  },
+  'agent-reject': {
+    tag: 'Phase 4B · Reject', title: 'Agent รับแจ้ง Rejected',
+    sections: [
+      { title: 'Action', items: ['Status → Rejected','Alert บน Dashboard','Agent ต้องติดต่อลูกค้าและดำเนินการใหม่'] }
+    ],
+    tech: ['Webhook','LINE Push API']
+  },
+  'agent-expired': {
+    tag: 'Phase 4C · Expired', title: 'Agent รับแจ้ง Expired',
+    sections: [
+      { title: 'Action', items: ['Status → Expired (auto)','Real-time Alert บน Dashboard','แสดง Follow-up suggestions'] }
+    ],
+    tech: ['Webhook','Redis TTL Event']
+  },
+  'port-logic': {
+    tag: 'Phase 5A · System Logic', title: 'Multi-Account Mapping',
+    sections: [
+      { title: 'Process', items: ['Map LINE UID กับ Customer ID ใน Database','ดึงบัญชีทั้งหมด (Main/Joint/Corporate)','ตรวจสอบสิทธิ์การเข้าถึงข้อมูลแต่ละบัญชี'] },
+      { title: 'Security', items: ['Verify LINE Access Token','Validate account ownership','Enforce row-level access control'] }
+    ],
+    tech: ['LINE Login API','JWT','Database Query']
+  },
+  'port-data': {
+    tag: 'Phase 5A · System Logic', title: 'Portfolio Data Fetching',
+    sections: [
+      { title: 'Data Points', items: ['Cost Basis vs Market Value','Unrealized Gain/Loss','Asset Allocation (Equity/Bond/Cash)','Fund Performance History','Current NAV per fund'] },
+      { title: 'Data Source', items: ['Call Fund Pricing Service','Query Core Banking System','Cache data with TTL'] }
+    ],
+    tech: ['Portfolio API','Pricing Service','Redis Cache']
+  },
+  'port-ui': {
+    tag: 'Phase 5A · UX/UI', title: 'Account Selector UX',
+    sections: [
+      { title: 'Interaction', items: ['Default เลือกบัญชีล่าสุดที่ใช้งาน','แสดงชื่อบัญชีและเลขที่บัญชี (Masked)','เปลี่ยนบัญชีแล้ว Data ใน Dashboard ต้องอัปเดตทันที','Account Type Badge (บุคคล/นิติบุคคล/ร่วม)'] }
+    ],
+    tech: ['LIFF','React','State Management']
+  },
+  'port-dashboard': {
+    tag: 'Phase 5A · UX/UI', title: 'Portfolio Dashboard',
+    sections: [
+      { title: 'Components', items: ['Total Portfolio Value','Gain/Loss (%) แยกตามประเภท','Allocation Chart (Pie/Bar)','Top 5 Funds by Value','Performance YTD'] },
+      { title: 'Interaction', items: ['Tap fund → see detail breakdown','Tap chart → filter by asset class','Pull to refresh → sync from backend'] }
+    ],
+    tech: ['LIFF','Chart Library','Real-time Sync']
+  },
+  'summary-logic': {
+    tag: 'Phase 5B · System Logic', title: 'Transaction Filtering',
+    sections: [
+      { title: 'Business Logic', items: ['แสดงสถานะรายการ: Pending, Success, Rejected, Expired','รวมยอดรวมซื้อ/ขายแยกตามรายวัน','สามารถ Filter ย้อนหลังได้ 7 วัน','Show execution date/time สำหรับแต่ละรายการ'] },
+      { title: 'Query', items: ['Filter by account','Order by execution date DESC','Join with fund master สำหรับชื่อกองทุน'] }
+    ],
+    tech: ['Reporting DB','Query Engine','Aggregation']
+  },
+  'summary-export': {
+    tag: 'Phase 5B · System Logic', title: 'Report Export Service',
+    sections: [
+      { title: 'Export Options', items: ['PDF format สำหรับพิมพ์','CSV สำหรับ Excel import','PNG/JPG preview'] },
+      { title: 'Content', items: ['Header: รหัสลูกค้า + วันที่','Body: รายการทั้งวัน','Footer: ยอดรวมและลงนามดิจิทัล'] }
+    ],
+    tech: ['PDF Generator','Chart Export','File Storage']
+  },
+  'summary-ui': {
+    tag: 'Phase 5B · UX/UI', title: 'Transaction Cards',
+    sections: [
+      { title: 'UI Components', items: ['Status Badge ที่ชัดเจน (Success/Rejected/Expired)','แสดงเวลาที่ทำรายการ (Timestamp)','Fund Name + Amount + Type (BUY/SELL/SWITCH)','Tap card → View Details modal'] },
+      { title: 'Sorting & Filter', items: ['Default: เรียงตามเวลาใหม่ก่อน','Filter by status (Success, Pending, etc.)','Search by fund name','Date range picker'] }
+    ],
+    tech: ['LIFF','List Components','Filter UI']
+  },
+  'summary-scheduler': {
+    tag: 'Phase 5B · Background Job', title: 'Scheduled Auto-Generation @ 15:30',
+    sections: [
+      { title: 'Schedule', items: ['🕒 ทุกวันเวลา 15:30 (3:30 PM)','Cron: 0 15 30 * * *','ระบบจะค้นหาลูกค้าทั้งหมด'] },
+      { title: 'Process', items: ['ดึงข้อมูล T+0:00 ถึง T+23:59','Compile report สำหรับแต่ละ Account','เก็บรายงานไว้ใน Database','ส่ง Notification ไปยัง Customer ที่มี transaction'] },
+      { title: 'Optimization', items: ['Query execution ใช้ parallel processing','Cache result เพื่อรอ customer request','Batch insert ไป database'] }
+    ],
+    tech: ['Cron Job','Bull/BullMQ','Redis','Reporting DB']
+  },
+  'summary-notify': {
+    tag: 'Phase 5B · Customer Notification', title: 'Report Ready Notification',
+    sections: [
+      { title: 'Trigger', items: ['เมื่อ Scheduler เสร็จสร้างรายงาน','ส่ง LINE Push Notification','แสดง Badge บน Rich Menu'] },
+      { title: 'Message Content', items: ['📊 "รายงานวันนี้พร้อมแล้ว"','Summary: 2 BUY, 1 SELL, 1 Rejected','Deep link ไปยัง Daily Summary','กดเข้าได้เลือก Account ที่ต้องการ'] }
+    ],
+    tech: ['LINE Messaging API','Webhook','Push Notification']
+  },
+  'summary-storage': {
+    tag: 'Phase 5B · Data Storage', title: 'Report Storage by Account',
+    sections: [
+      { title: 'Structure', items: ['Report ID (unique per day/account)','Generated Timestamp: 15:30','Account ID + Account Type','Transactions array + Summary stats'] },
+      { title: 'Query Support', items: ['Get latest report ต่อ account','Get historical (7 days)','Search by account/date range'] },
+      { title: 'TTL', items: ['เก็บ 90 days ตามนโยบาย compliance','Auto-delete after 90 days'] }
+    ],
+    tech: ['PostgreSQL','Reporting DB','Indexing']
+  },
+  'summary-selector': {
+    tag: 'Phase 5B · UX/UI', title: 'Account Selector for Daily Summary',
+    sections: [
+      { title: 'Display', items: ['แสดงบัญชีทั้งหมดของ Customer','Default: บัญชีล่าสุดที่ใช้งาน','แสดง Account number (masked)','บ่งบอก Account type (บุคคล/นิติบุคคล/ร่วม)'] },
+      { title: 'Interaction', items: ['Tap account → Load report สำหรับบัญชีนั้น','Change account → Report update ทันที','Show "No transaction" ถ้าบัญชีไม่มี report'] },
+      { title: 'UI State', items: ['Default account มี checkmark','Other accounts สามารถ tap เพื่อเปลี่ยน'] }
+    ],
+    tech: ['LIFF','Multi-Account API','State Management']
+  },
+  'summary-logic': {
+    tag: 'Phase 5B · Report Engine', title: 'Report Generation Logic',
+    sections: [
+      { title: 'Filtering', items: ['Query ตาม selected account','Date range: 00:00 - 23:59 ของวันนั้น','Status: Pending, Success, Rejected, Expired'] },
+      { title: 'Data Compilation', items: ['Group by account','Count by status','Calculate totals','Generate summaries'] }
+    ],
+    tech: ['Report Engine','Query Builder','Data Aggregation']
+  },
+  'summary-export': {
+    tag: 'Phase 5B · System Logic', title: 'Report Export Service',
+    sections: [
+      { title: 'Export Options', items: ['PDF format สำหรับพิมพ์','CSV สำหรับ Excel import','PNG/JPG preview'] },
+      { title: 'Content', items: ['Header: รหัสลูกค้า + วันที่','Body: รายการทั้งวัน','Footer: ยอดรวมและลงนามดิจิทัล'] }
+    ],
+    tech: ['PDF Generator','Chart Export','File Storage']
+  }
+};
+
+function showDetail(key) {
+  const d = details[key];
+  if (!d) return;
+  const panel = document.getElementById('detail-panel');
+  const content = document.getElementById('panel-content');
+  let html = `<div class="panel-tag">${d.tag}</div><div class="panel-title">${d.title}</div>`;
+  (d.sections||[]).forEach(s => {
+    html += `<div class="panel-section"><div class="panel-section-title">${s.title}</div>`;
+    s.items.forEach(i => { html += `<div class="panel-item">${i}</div>`; });
+    html += '</div>';
+  });
+  if (d.tech && d.tech.length) {
+    html += `<div class="panel-section"><div class="panel-section-title">Tech Stack</div><div>`;
+    d.tech.forEach(t => { html += `<span class="panel-tech">${t}</span>`; });
+    html += '</div></div>';
+  }
+  content.innerHTML = html;
+  panel.classList.add('open');
+}
+function closePanel() {
+  document.getElementById('detail-panel').classList.remove('open');
+}
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closePanel(); });
+</script>
+</body>
+</html>
