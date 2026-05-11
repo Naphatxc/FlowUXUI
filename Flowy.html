@@ -1190,12 +1190,14 @@ const details = {
     tech: ['REST API POST /orders','Background Job Queue']
   },
   'system-flex': {
-    tag: 'Phase 2 · Step 4', title: 'สร้าง & ส่ง LINE Flex Message',
+    tag: 'Phase 2 · Step 1', title: 'สร้าง & ส่ง LINE Flex Message',
     sections: [
-      { title: 'Message Content', items: ['ประเภทรายการ (Buy/Sell/Switch)','ชื่อกองทุน + จำนวน','Account ที่ใช้','ปุ่ม "ดูรายละเอียด" → เปิด LIFF'] },
-      { title: 'Delivery', items: ['ส่งผ่าน LINE Messaging API (Push)','ใช้ LINE User ID ของลูกค้า'] }
+      { title: 'Multi-Account Handling', items: ['1 Customer สามารถมี M Accounts (Personal/Joint/Corporate)','แต่ละ Order สัมพันธ์กับ 1 Account เท่านั้น','LIFF link include: order_id + account_id (URL params)'] },
+      { title: 'Message Content', items: ['ประเภทรายการ (Buy/Sell/Switch)','ชื่อกองทุน + จำนวน','Account ที่ใช้ (ชื่อบัญชี เช่น "บุคคล 001")','ปุ่ม "ดูรายละเอียด" → เปิด LIFF with params'] },
+      { title: 'Delivery', items: ['ส่งผ่าน LINE Messaging API (Push)','ใช้ LINE User ID ของลูกค้า','Customer สามารถเลือก Account ได้บน LIFF'] },
+      { title: 'Link Format', items: ['liff.line.me/confirm?orderId=ORDER123&accountId=ACC456'] }
     ],
-    tech: ['LINE Messaging API','Flex Message JSON','Push Message']
+    tech: ['LINE Messaging API','Flex Message JSON','Push Message','URL Routing']
   },
   'timer': {
     tag: 'Background Job', title: 'TTL Timer & Smart Reminder',
@@ -1206,13 +1208,14 @@ const details = {
     tech: ['Job Queue (Bull/BullMQ)','Redis TTL','LINE Push API']
   },
   'liff-review': {
-    tag: 'Phase 3 · Step 5', title: 'Customer Review บน LIFF',
+    tag: 'Phase 2 · Step 2', title: 'Customer Review บน LIFF',
     sections: [
-      { title: 'LIFF Page Content', items: ['Account Selector (กรณีมีหลาย account)','รายละเอียดคำสั่งครบถ้วน','TTL Countdown timer','ปุ่ม "ยืนยัน" และ "ปฏิเสธ"'] },
+      { title: 'Architecture', items: ['1 Customer ↔ M Accounts (1-to-Many)','LIFF link เก็บ: order_id + account_id','Account ID ผ่าน URL parameter: ?orderId=xxx&accountId=yyy'] },
+      { title: 'LIFF Page Content', items: ['Account Selector (แสดง account ที่ Order นี้เกี่ยวข้อง)','รายละเอียดคำสั่งครบถ้วน','TTL Countdown timer','ปุ่ม "ยืนยัน" และ "ปฏิเสธ"'] },
       { title: 'UX Note', items: ['เมื่อคำขอยืนยันใกล้ cutoff ให้เปลี่ยนการ์ดคำขอเป็นสีแดง','แสดง alert/timer ที่ชัดเจนเพื่อกระตุ้นการตัดสินใจ'] },
-      { title: 'Security', items: ['Verify LINE Access Token ก่อนแสดงข้อมูล','ตรวจว่า Order ยังไม่หมดอายุ','1 Link = 1 Order = ใช้ได้ครั้งเดียว'] }
+      { title: 'Security', items: ['Verify LINE Access Token ก่อนแสดงข้อมูล','Verify account_id ว่าเป็นของ LINE UID นี้ (ownership check)','ตรวจว่า Order ยังไม่หมดอายุ','1 Link = 1 Order = ใช้ได้ครั้งเดียว (Nonce-based validation)'] }
     ],
-    tech: ['LIFF SDK','LINE Login','JWT Verify']
+    tech: ['LIFF SDK','LINE Login','JWT Verify','URL Parameters','Database Verification']
   },
   'system-reminder': {
     tag: 'Exception Path · E1', title: 'Smart Reminder System',
