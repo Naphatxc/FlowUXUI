@@ -673,74 +673,11 @@
   </div>
 
   <!-- ══════════════════════════════════════
-       PHASE 2: NOTIFICATION
+       PHASE 2: CUSTOMER REVIEW & CONFIRM
   ══════════════════════════════════════ -->
   <div class="phase-header">
     <div class="phase-header-dot" style="background:var(--accent-teal)"></div>
-    <span class="phase-header-text" style="color:var(--accent-teal)">Phase 2 — Push Notification</span>
-    <span class="phase-header-num">LINE Flex Message</span>
-  </div>
-
-  <div class="step-row">
-    <div class="lane" style="width:var(--lane-w)">
-      <div class="node" style="--node-color:var(--accent-purple);opacity:0.5;pointer-events:none;min-height:260px">
-        <div class="node-tag">Waiting</div>
-        <div class="node-title">รอสถานะ</div>
-        <div class="node-sub">Dashboard แสดง <span class="badge pending">⏳ Pending</span></div>
-      </div>
-    </div>
-    <div style="width:var(--gap-x);flex-shrink:0"></div>
-    <div class="lane" style="width:var(--lane-w)">
-      <div class="node" style="--node-color:var(--accent-teal)" onclick="showDetail('system-flex')">
-        <div class="node-step">4</div>
-        <div class="node-tag">LINE Messaging API</div>
-        <div class="node-title">สร้าง &amp; ส่ง Flex Message</div>
-        <div class="node-sub">Push to LINE User ID · แสดงรายละเอียดครบถ้วน</div>
-      </div>
-      <div class="v-conn"></div>
-      <div class="node" style="--node-color:var(--accent-amber)" onclick="showDetail('timer')">
-        <div class="node-step">4b</div>
-        <div class="node-tag">Background Job</div>
-        <div class="node-title">TTL Timer เริ่มนับ</div>
-        <div class="node-sub">T+15 min → Reminder 1 · T+30 min → Reminder 2</div>
-      </div>
-    </div>
-    <div style="width:var(--gap-x);flex-shrink:0;display:flex;align-items:center;padding-top:0px">
-      <div style="width:100%;height:2px;background:linear-gradient(90deg,var(--accent-teal),var(--accent-blue));position:relative">
-        <div style="position:absolute;right:-6px;top:-4px;color:var(--accent-blue);font-size:10px">▶</div>
-        <div style="position:absolute;left:50%;top:-18px;transform:translateX(-50%);font-size:9px;font-family:var(--mono);color:var(--text-muted);white-space:nowrap">Push Notif.</div>
-      </div>
-    </div>
-    <div class="lane" style="width:var(--lane-w)">
-      <div class="node" style="--node-color:var(--accent-blue)" onclick="showDetail('customer-flex')">
-        <div class="node-step">4</div>
-        <div class="node-tag">Customer · LINE</div>
-        <div class="node-title">รับ Flex Message</div>
-        <!-- Flex message mockup -->
-        <div class="flex-msg" onclick="event.stopPropagation()">
-          <div class="flex-header">
-            <span class="flex-header-title">🔔 คำขอยืนยันรายการ</span>
-            <span class="flex-header-badge">BUY</span>
-          </div>
-          <div class="flex-body">
-            <div class="flex-fund">กองทุน TMBAMEASTSPRING</div>
-            <div class="flex-row"><span>Account</span><strong>บัญชีบุคคล 001</strong></div>
-            <div class="flex-row"><span>จำนวน</span><strong>50,000 บาท</strong></div>
-            <div class="flex-row"><span>วันที่</span><strong>07/05/2026</strong></div>
-            <hr class="flex-divider">
-            <button class="flex-cta" onclick="showDetail('customer-flex')">ดูรายละเอียด →</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════
-       PHASE 3: CUSTOMER REVIEW & CONFIRM
-  ══════════════════════════════════════ -->
-  <div class="phase-header">
-    <div class="phase-header-dot" style="background:var(--accent-blue)"></div>
-    <span class="phase-header-text" style="color:var(--accent-blue)">Phase 3 — Customer Review &amp; Confirm</span>
+    <span class="phase-header-text" style="color:var(--accent-teal)">Phase 2 — Customer Review & Confirm</span>
     <span class="phase-header-num">LIFF · Account Selector · Authorization</span>
   </div>
 
@@ -755,7 +692,7 @@
     <div style="width:var(--gap-x);flex-shrink:0"></div>
     <div class="lane" style="width:var(--lane-w)">
       <div class="node" style="--node-color:var(--accent-teal)" onclick="showDetail('liff-server')">
-        <div class="node-step">5</div>
+        <div class="node-step">2</div>
         <div class="node-tag">LIFF Server</div>
         <div class="node-title">เปิด LIFF Page</div>
         <div class="node-sub">Verify LINE Token · โหลดรายละเอียดคำสั่ง</div>
@@ -764,10 +701,52 @@
     <div style="width:var(--gap-x);flex-shrink:0"></div>
     <div class="lane" style="width:var(--lane-w)">
       <div class="node" style="--node-color:var(--accent-blue)" onclick="showDetail('liff-review')">
-        <div class="node-step">5</div>
+        <div class="node-step">2a</div>
         <div class="node-tag">Customer · LIFF</div>
         <div class="node-title">ตรวจสอบรายการ</div>
-        <div class="node-sub">กรณีใกล้ cutoff ให้การ์ดคำขอเปลี่ยนเป็นสีแดง</div>
+        <div class="node-sub">ปกติ</div>
+        <!-- Account selector (multi-account) -->
+        <div style="margin:8px 0;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px">
+          <div style="font-size:9px;color:var(--text-muted);font-family:var(--mono);margin-bottom:4px">ACCOUNT SELECTOR</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap">
+            <div style="background:rgba(74,158,255,0.15);border:1px solid var(--accent-blue);border-radius:4px;padding:3px 8px;font-size:9px;color:var(--accent-blue)">✓ บุคคล 001</div>
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:9px;color:var(--text-muted)">นิติบุคคล</div>
+          </div>
+        </div>
+        <!-- LIFF normal -->
+        <div class="liff-mock" onclick="event.stopPropagation()">
+          <div class="liff-topbar">
+            <div class="liff-dot" style="background:#ff5f57"></div>
+            <div class="liff-dot" style="background:#febc2e"></div>
+            <div class="liff-dot" style="background:#28c840"></div>
+            <span style="margin-left:4px">liff.line.me/confirm</span>
+          </div>
+          <div class="liff-body">
+            <div class="liff-row"><span class="liff-key">ประเภท</span><span class="liff-val">BUY</span></div>
+            <div class="liff-row"><span class="liff-key">กองทุน</span><span class="liff-val">TMBAMEASTSPRING</span></div>
+            <div class="liff-row"><span class="liff-key">จำนวน</span><span class="liff-val">50,000 ฿</span></div>
+            <div class="liff-row"><span class="liff-key">Account</span><span class="liff-val">บุคคล 001</span></div>
+            <button class="liff-btn confirm">✓ ยืนยันรายการ</button>
+            <button class="liff-btn reject">✕ ปฏิเสธ</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-row">
+    <div class="lane" style="width:var(--lane-w)">
+    </div>
+    <div style="width:var(--gap-x);flex-shrink:0"></div>
+    <div class="lane" style="width:var(--lane-w)">
+    </div>
+    <div style="width:var(--gap-x);flex-shrink:0"></div>
+    <div class="lane" style="width:var(--lane-w)">
+      <div class="node" style="--node-color:var(--accent-blue)" onclick="showDetail('liff-review')">
+        <div class="node-step">2b</div>
+        <div class="node-tag">Customer · LIFF</div>
+        <div class="node-title">ตรวจสอบรายการ</div>
+        <div class="node-sub">ใกล้หมดเวลา</div>
         <!-- Account selector (multi-account) -->
         <div style="margin:8px 0;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px">
           <div style="font-size:9px;color:var(--text-muted);font-family:var(--mono);margin-bottom:4px">ACCOUNT SELECTOR</div>
@@ -799,18 +778,18 @@
   </div>
 
   <!-- ══════════════════════════════════════
-       PHASE 4: HAPPY PATH — SUCCESS
+       PHASE 3: HAPPY PATH — SUCCESS
   ══════════════════════════════════════ -->
   <div class="phase-header">
     <div class="phase-header-dot" style="background:var(--accent-teal)"></div>
-    <span class="phase-header-text" style="color:var(--accent-teal)">Phase 4A — Happy Path · Success</span>
+    <span class="phase-header-text" style="color:var(--accent-teal)">Phase 3A — Happy Path · Success</span>
     <span class="phase-header-num">Webhook · Real-time Sync</span>
   </div>
 
   <div class="step-row">
     <div class="lane" style="width:var(--lane-w)">
       <div class="node" style="--node-color:var(--accent-purple)" onclick="showDetail('agent-success')">
-        <div class="node-step">7</div>
+        <div class="node-step">3</div>
         <div class="node-tag">Agent · Web Portal</div>
         <div class="node-title">รับ Webhook Real-time</div>
         <div class="node-sub">Status อัปเดตเป็น <span class="badge success">✓ Success</span> ทันที</div>
@@ -824,7 +803,7 @@
     </div>
     <div class="lane" style="width:var(--lane-w)">
       <div class="node" style="--node-color:var(--accent-teal)" onclick="showDetail('system-process')">
-        <div class="node-step">6</div>
+        <div class="node-step">3</div>
         <div class="node-tag">Backend System</div>
         <div class="node-title">ประมวลผล Confirmation</div>
         <div class="node-sub">บันทึกคำสั่ง · ส่ง Webhook → Agent · ส่ง Receipt → Customer</div>
@@ -838,7 +817,7 @@
     </div>
     <div class="lane" style="width:var(--lane-w)">
       <div class="node" style="--node-color:var(--accent-blue)" onclick="showDetail('customer-confirm')">
-        <div class="node-step">6</div>
+        <div class="node-step">3</div>
         <div class="node-tag">Customer · LIFF</div>
         <div class="node-title">กด "ยืนยันรายการ"</div>
         <div class="node-sub">ส่ง Confirm Event → System · รับ Receipt</div>
@@ -847,11 +826,11 @@
   </div>
 
   <!-- ══════════════════════════════════════
-       PHASE 4B: REJECT PATH
+       PHASE 3B: REJECT PATH
   ══════════════════════════════════════ -->
   <div class="phase-header">
     <div class="phase-header-dot" style="background:var(--accent-red)"></div>
-    <span class="phase-header-text" style="color:var(--accent-red)">Phase 4B — Reject Path</span>
+    <span class="phase-header-text" style="color:var(--accent-red)">Phase 3B — Reject Path</span>
     <span class="phase-header-num">Customer ปฏิเสธ</span>
   </div>
 
@@ -895,11 +874,11 @@
   </div>
 
   <!-- ══════════════════════════════════════
-       PHASE 4C: EXPIRY EXCEPTION
+       PHASE 3C: EXPIRY EXCEPTION
   ══════════════════════════════════════ -->
   <div class="phase-header">
     <div class="phase-header-dot" style="background:var(--accent-amber)"></div>
-    <span class="phase-header-text" style="color:var(--accent-amber)">Phase 4C — Exception: Inaction &amp; Expiry</span>
+    <span class="phase-header-text" style="color:var(--accent-amber)">Phase 3C — Exception: Inaction &amp; Expiry</span>
     <span class="phase-header-num">Smart Reminder · TTL · Auto-Cancel</span>
   </div>
 
@@ -923,7 +902,7 @@
         <div class="node-step">E1</div>
         <div class="node-tag">Background Job · TTL</div>
         <div class="node-title">Smart Reminder</div>
-        <div class="node-sub">T+15 min: Push Reminder 1 · T+30 min: Push Reminder 2 · ใกล้หมดอายุเปลี่ยนเป็นแดง</div>
+        <div class="node-sub">T-1h: Push Reminder (ก่อน cutoff 1 ชม) · ใกล้หมดอายุเปลี่ยนเป็นแดง</div>
       </div>
       <div class="v-conn"></div>
       <div class="node" style="--node-color:var(--accent-red)" onclick="showDetail('system-expire')">
@@ -1221,7 +1200,7 @@ const details = {
   'timer': {
     tag: 'Background Job', title: 'TTL Timer & Smart Reminder',
     sections: [
-      { title: 'Schedule', items: ['T+0: Order สร้าง → Timer เริ่ม','T+15 min: ส่ง Reminder Notification ครั้งที่ 1','T+30 min: ส่ง Reminder Notification ครั้งที่ 2','T=Cut-off: Auto-Cancel → Status Expired'] },
+      { title: 'Schedule', items: ['T+0: Order สร้าง → Timer เริ่ม','T-1h: ส่ง Reminder Notification (ก่อน cutoff 1 ชม)','T=Cut-off: Auto-Cancel → Status Expired'] },
       { title: 'UX', items: ['Reminder แสดง countdown ที่เหลือ','LIFF แสดง progress bar เวลาที่เหลือ'] }
     ],
     tech: ['Job Queue (Bull/BullMQ)','Redis TTL','LINE Push API']
@@ -1261,21 +1240,21 @@ const details = {
     tech: ['LINE Flex Message','LIFF deeplink']
   },
   'agent-success': {
-    tag: 'Phase 4A · Success', title: 'Agent รับ Success via Webhook',
+    tag: 'Phase 3A · Success', title: 'Agent รับ Success via Webhook',
     sections: [
       { title: 'Real-time Update', items: ['Webhook POST ไปยัง Agent Portal ทันทีที่ Customer ยืนยัน','Dashboard อัปเดต Status โดยไม่ต้อง Refresh','แสดง Toast notification: "ลูกค้ายืนยันแล้ว"'] }
     ],
     tech: ['Webhook','WebSocket / SSE','Real-time Dashboard']
   },
   'agent-reject': {
-    tag: 'Phase 4B · Reject', title: 'Agent รับแจ้ง Rejected',
+    tag: 'Phase 3B · Reject', title: 'Agent รับแจ้ง Rejected',
     sections: [
       { title: 'Action', items: ['Status → Rejected','Alert บน Dashboard','Agent ต้องติดต่อลูกค้าและดำเนินการใหม่'] }
     ],
     tech: ['Webhook','LINE Push API']
   },
   'agent-expired': {
-    tag: 'Phase 4C · Expired', title: 'Agent รับแจ้ง Expired',
+    tag: 'Phase 3C · Expired', title: 'Agent รับแจ้ง Expired',
     sections: [
       { title: 'Action', items: ['Status → Expired (auto)','Real-time Alert บน Dashboard','แสดง Follow-up suggestions'] }
     ],
